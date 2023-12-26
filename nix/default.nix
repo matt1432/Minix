@@ -66,15 +66,15 @@ in {
         '';
       };
 
-    user = mkOption {
-      default = "mc";
-      type = types.str;
-    };
+      user = mkOption {
+        default = "mc";
+        type = types.str;
+      };
 
-    group = mkOption {
-      default = "mc";
-      type = types.str;
-    };
+      group = mkOption {
+        default = "mc";
+        type = types.str;
+      };
 
       instances = mkOption {
         type = with types; attrsOf (submodule (import ./minecraft-instance-options.nix pkgs));
@@ -137,59 +137,86 @@ in {
       )
     ];
 
-    systemd.services = eachEnabledInstance (name: icfg: {
-      description = "Minecraft Server ${name}";
-      wantedBy = ["multi-user.target"];
-      after = ["network.target"];
+    systemd.services =
+      {
+        tmuxServer = {
+          description = "Master Tmux server that runs on boot";
+          wantedBy = ["multi-user.target"];
 
-      path = with pkgs; [icfg.jvmPackage bash];
+          serviceConfig = {
+            Type = "forking";
+            User = cfg.user;
+            ExecStart = "${pkgs.tmux}/bin/tmux new-session -s master -d";
+            ExecStop = "${pkgs.tmux}/bin/tmux kill-session -t master";
+          };
+        };
+      }
+      // eachEnabledInstance (name: icfg: {
+        description = "Minecraft Server ${name}";
+        wantedBy = ["multi-user.target"];
+        partOf = ["tmuxServer.service"];
+        after = ["tmuxServer.service"];
 
-      environment = {
-        JVMOPTS = icfg.jvmOptString;
-        MCRCON_PORT = toString icfg.serverConfig.rcon-port;
-        MCRCON_PASS = "whatisloveohbabydonthurtmedonthurtmenomore";
+        path = with pkgs; [icfg.jvmPackage bash];
+
+        environment = {
+          JVMOPTS = icfg.jvmOptString;
+          MCRCON_PORT = toString icfg.serverConfig.rcon-port;
+          MCRCON_PASS = "whatisloveohbabydonthurtmedonthurtmenomore";
+        };
+
+        serviceConfig = let
+          fullname = mkInstanceName name;
+        in {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          KillMode = "none";
+          KillSignal = "SIGCONT";
+          ExecStart = concatStrings [
+            "${pkgs.tmux}/bin/tmux new-session -s ${fullname} -d"
+            " '/var/lib/${fullname}/start.sh'"
+          ];
+          ExecStop = concatStrings [
+            "${pkgs.tmux}/bin/tmux send-keys -t ${fullname}"
+            " 'say SERVER SHUTTING DOWN. Saving map...' C-m"
+            " 'save-all' C-m"
+            " 'stop' C-m"
+            ";"
+            "sleep 10;"
+            "${pkgs.tmux}/bin/tmux kill-session -t ${fullname}"
+          ];
+          User = cfg.user;
+          Group = cfg.group;
+          StateDirectory = fullname;
+          WorkingDirectory = "/var/lib/${fullname}";
+        };
+
+        preStart = ''
+          # Ensure EULA is accepted
+          ln -sf ${eulaFile} eula.txt
+
+          # Ensure server.properties is present
+          if [[ -f server.properties ]]; then
+            mv -f server.properties server.properties.orig
+          fi
+
+          # This file must be writeable, because Mojang.
+          cp ${serverPropertiesFile icfg.serverConfig} server.properties
+          chmod 644 server.properties
+        '';
+      });
+
+    users.users = optionalAttrs (cfg.user == "mc") {
+      mc = {
+        group = cfg.group;
+        uid = config.ids.uids.mc;
+        home = cfg.dataDir;
       };
+    };
 
-      serviceConfig = let
-        fullname = mkInstanceName name;
-      in {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        KillMode = "none";
-        KillSignal = "SIGCONT";
-        ExecStart = concatStrings [
-          "${pkgs.tmux}/bin/tmux new-session -s ${fullname} -d"
-          " '/var/lib/${fullname}/start.sh'"
-        ];
-        ExecStop = concatStrings [
-          "${pkgs.tmux}/bin/tmux send-keys -t ${fullname}"
-          " 'say SERVER SHUTTING DOWN. Saving map...' C-m"
-          " 'save-all' C-m"
-          " 'stop' C-m"
-          ";"
-          "sleep 10;"
-          "${pkgs.tmux}/bin/tmux kill-session -t ${fullname}"
-        ];
-        User = cfg.user;
-        Group = cfg.group;
-        StateDirectory = fullname;
-        WorkingDirectory = "/var/lib/${fullname}";
-      };
-
-      preStart = ''
-        # Ensure EULA is accepted
-        ln -sf ${eulaFile} eula.txt
-
-        # Ensure server.properties is present
-        if [[ -f server.properties ]]; then
-          mv -f server.properties server.properties.orig
-        fi
-
-        # This file must be writeable, because Mojang.
-        cp ${serverPropertiesFile icfg.serverConfig} server.properties
-        chmod 644 server.properties
-      '';
-    });
+    users.groups = optionalAttrs (cfg.group == "mc") {
+      mc.gid = config.ids.gids.mc;
+    };
 
     networking.firewall.allowedUDPPorts = queryPorts;
     networking.firewall.allowedTCPPorts = serverPorts ++ queryPorts ++ openRconPorts;
