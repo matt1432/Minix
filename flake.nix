@@ -1,44 +1,35 @@
 {
-  description = "This is a flake template";
+  description = "NixOS module for minecraft servers";
 
-  inputs = {
-    nix.url = "github:NixOS/nix";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.05";
-
-    flake-utils.url = "github:numtide/flake-utils";
-    flake-compat = {
-      url = "github:edolstra/flake-compat";
-      flake = false;
-    };
-  };
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
   outputs = {
     self,
     nixpkgs,
-    flake-utils,
     ...
-  } @ inputs: let
-    inherit (nixpkgs.lib) recursiveUpdate foldl' nixosSystem;
-  in
-    foldl' recursiveUpdate {} [
-      # System-dependent outputs
-      (flake-utils.lib.eachDefaultSystem (system: let
-        pkgs = nixpkgs.legacyPackages.${system};
-        inherit (pkgs) mkShell;
-      in {
-        devShell = mkShell {
-          buildInputs = with pkgs; [
-            # Make sure we have a fresh nix
-            nixUnstable
-            alejandra
-            rnix-lsp
-          ];
-        };
-      }))
-
-      # System-independent outputs
-      {
-        module = import ./nixos/modules/services/games/minecraft-servers;
-      }
+  }: let
+    supportedSystems = [
+      "x86_64-linux"
+      "x86_64-darwin"
     ];
+
+    perSystem = attrs:
+      nixpkgs.lib.genAttrs supportedSystems (system: let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
+        attrs system pkgs);
+  in {
+    nixosModules.default = import ./nix;
+
+    devShells = perSystem (_: pkgs: {
+      default = pkgs.mkShell {
+        nativeBuildInputs = with pkgs; [
+          nix
+          alejandra
+        ];
+      };
+    });
+
+    formatter = perSystem (_: pkgs: pkgs.alejandra);
+  };
 }
