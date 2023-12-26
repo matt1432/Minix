@@ -48,17 +48,6 @@ with lib; let
     concatStringsSep "\n"
     (mapAttrsToList mkOptionLine c);
 
-  # Configure rsync access
-  mkRsyncdConf = name:
-    pkgs.writeText "rsyncd-minecraft.conf" ''
-      log file = /var/lib/${mkInstanceName name}/rsync.log
-      [${mkInstanceName name}]
-      use chroot = false
-      comment = Minecraft server state
-      path = /var/lib/${mkInstanceName name}
-      read only = false
-    '';
-
   # Render EULA file
   eulaFile = builtins.toFile "eula.txt" ''
     # eula.txt managed by NixOS Configuration
@@ -76,6 +65,16 @@ in {
           Whether or not you accept the Minecraft EULA
         '';
       };
+
+    user = mkOption {
+      default = "mc";
+      type = types.str;
+    };
+
+    group = mkOption {
+      default = "mc";
+      type = types.str;
+    };
 
       instances = mkOption {
         type = with types; attrsOf (submodule (import ./minecraft-instance-options.nix pkgs));
@@ -169,7 +168,8 @@ in {
           "sleep 10;"
           "${pkgs.tmux}/bin/tmux kill-session -t ${fullname}"
         ];
-        User = fullname;
+        User = cfg.user;
+        Group = cfg.group;
         StateDirectory = fullname;
         WorkingDirectory = "/var/lib/${fullname}";
       };
@@ -188,25 +188,6 @@ in {
         chmod 644 server.properties
       '';
     });
-
-    users.users = eachEnabledInstance (name: icfg: let
-      rsyncCmd = ''command="rsync --config=${mkRsyncdConf name} --server --daemon .",no-agent-forwarding,no-port-forwarding,no-user-rc,no-X11-forwarding,no-pty'';
-    in {
-      description = "Minecraft server service user for instance ${name}";
-      isSystemUser = true;
-      useDefaultShell = true;
-      createHome = true;
-      group = mkInstanceName name;
-      home = "/var/lib/${mkInstanceName name}";
-      openssh.authorizedKeys = optionalAttrs (icfg.rsyncSSHKeys != []) {
-        keys =
-          map
-          (x: rsyncCmd + " " + x)
-          icfg.rsyncSSHKeys;
-      };
-    });
-
-    users.groups = eachEnabledInstance (_: _: {});
 
     networking.firewall.allowedUDPPorts = queryPorts;
     networking.firewall.allowedTCPPorts = serverPorts ++ queryPorts ++ openRconPorts;
