@@ -155,11 +155,20 @@ in {
         fullname = mkInstanceName name;
       in {
         Restart = "always";
-        ExecStart = "/var/lib/${fullname}/start.sh";
-        ExecStop = ''
-          ${pkgs.mcrcon}/bin/mcrcon stop
-        '';
-        TimeoutStopSec = "20";
+        KillSignal = "SIGCONT";
+        ExecStart = concatStrings [
+          "${pkgs.tmux}/bin/tmux new-session -s ${fullname} -d"
+          " '/var/lib/${fullname}/start.sh'"
+        ];
+        ExecStop = concatStrings [
+          "${pkgs.tmux}/bin/tmux send-keys -t ${fullname}"
+          " 'say SERVER SHUTTING DOWN. Saving map...' C-m"
+          " 'save-all' C-m"
+          " 'stop' C-m"
+          ";"
+          "sleep 10;"
+          "${pkgs.tmux}/bin/tmux kill-session -t ${fullname}"
+        ];
         User = fullname;
         StateDirectory = fullname;
         WorkingDirectory = "/var/lib/${fullname}";
