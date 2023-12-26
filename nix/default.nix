@@ -165,6 +165,8 @@ in {
           MCRCON_PASS = "whatisloveohbabydonthurtmedonthurtmenomore";
         };
 
+        # Add script option instead of running start.sh
+
         serviceConfig = let
           fullname = mkInstanceName name;
         in {
@@ -174,7 +176,7 @@ in {
           KillSignal = "SIGCONT";
           ExecStart = concatStrings [
             "${pkgs.tmux}/bin/tmux new-session -s ${fullname} -d"
-            " '/var/lib/${fullname}/start.sh'"
+            " '/var/lib/minecraft/${fullname}/start.sh'"
           ];
           ExecStop = concatStrings [
             "${pkgs.tmux}/bin/tmux send-keys -t ${fullname}"
@@ -188,7 +190,7 @@ in {
           User = cfg.user;
           Group = cfg.group;
           StateDirectory = fullname;
-          WorkingDirectory = "/var/lib/${fullname}";
+          WorkingDirectory = "/var/lib/minecraft/${fullname}";
         };
 
         preStart = ''
