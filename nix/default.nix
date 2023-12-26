@@ -153,7 +153,9 @@ in {
       serviceConfig = let
         fullname = mkInstanceName name;
       in {
-        Restart = "always";
+        Type = "oneshot";
+        RemainAfterExit = true;
+        KillMode = "none";
         KillSignal = "SIGCONT";
         ExecStart = concatStrings [
           "${pkgs.tmux}/bin/tmux new-session -s ${fullname} -d"
