@@ -212,13 +212,12 @@ in {
     users.users = optionalAttrs (cfg.user == "mc") {
       mc = {
         group = cfg.group;
-        uid = config.ids.uids.mc;
         home = cfg.dataDir;
       };
     };
 
     users.groups = optionalAttrs (cfg.group == "mc") {
-      mc.gid = config.ids.gids.mc;
+      mc = {};
     };
 
     networking.firewall.allowedUDPPorts = queryPorts;
