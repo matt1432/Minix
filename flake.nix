@@ -1,11 +1,18 @@
 {
   description = "NixOS module for minecraft servers";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs = {
+    nixpkgs = {
+      type = "github";
+      owner = "NixOS";
+      repo = "nixpkgs";
+      ref = "nixos-unstable";
+    };
+  };
 
   outputs = {
-    self,
     nixpkgs,
+    self,
     ...
   }: let
     supportedSystems = [
@@ -14,21 +21,14 @@
     ];
 
     perSystem = attrs:
-      nixpkgs.lib.genAttrs supportedSystems (system: let
-        pkgs = nixpkgs.legacyPackages.${system};
-      in
-        attrs system pkgs);
+      nixpkgs.lib.genAttrs supportedSystems (system:
+        attrs system nixpkgs.legacyPackages.${system});
   in {
-    nixosModules.default = import ./nix;
+    nixosModules = {
+      nms = import ./modules;
 
-    devShells = perSystem (_: pkgs: {
-      default = pkgs.mkShell {
-        nativeBuildInputs = with pkgs; [
-          nix
-          alejandra
-        ];
-      };
-    });
+      default = self.nixosModules.nms;
+    };
 
     formatter = perSystem (_: pkgs: pkgs.alejandra);
   };
