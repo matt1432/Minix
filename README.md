@@ -9,16 +9,16 @@ In your `flake.nix`
 
 ```nix
 {
-  inputs.mms.url = "github:mkaito/nixos-modded-minecraft-servers";
+  inputs.nms.url = "github:mkaito/nixos-modded-minecraft-servers";
 }
 ```
 
 In your server config:
 
 ```nix
-{ inputs, ... }:
+{ nms, ... }:
 {
-  imports = [ inputs.mms.module ];
+  imports = [ nms.module ];
 
   services.modded-minecraft-servers = {
     # This is mandatory, sorry.
@@ -49,18 +49,16 @@ In your server config:
 }
 ```
 
-For a more elaborate example, you can have a look at [my actual server
-configuration](https://github.com/mkaito/nixos-configurations/blob/master/stargazer/minecraft-servers.nix).
-
 ### Server configuration
 
-Server configuration is done by setting options under the `serverConfig` attribute.
-This is a typed attrset that supports all vanilla settings. If your modpack adds
-custom settings, you may define these as key-value pairs in
+Server configuration is done by setting options under the `serverConfig`
+attribute.
+This is a typed attrset that supports all vanilla settings. If your modpack
+adds custom settings, you may define these as key-value pairs in
 `serverConfig.extraConfig`.
 
-This will overwrite any `server.properties` file found in the state folder. This
-module does not support stateful configuration.
+This will overwrite any `server.properties` file found in the state folder.
+This module does not support stateful configuration.
 
 For most modpacks, you can use all the defaults with very minor alterations,
 like a worldgen preset.
@@ -152,7 +150,7 @@ appropriate minecraft state folder.
 ### Under the hood
 
 Each defined instance runs as its own user `mc-${name}` and has
-its own state folder in `/var/lib/mc-${name}`.
+its own state folder in `/var/lib/minecraft/mc-${name}`.
 
 In order to "install" a modpack, you put all the files for the pack in this
 folder.

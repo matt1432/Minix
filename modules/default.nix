@@ -3,8 +3,12 @@
   lib,
   config,
   ...
-}:
-with lib; let
+}: let
+  inherit (lib) mkOption types unique;
+  inherit (lib.lists) elem;
+  inherit (lib.strings) concatStrings concatStringsSep escape stringAsChars;
+  inherit (lib.attrsets) filterAttrs mapAttrs' mapAttrsToList nameValuePair optionalAttrs;
+
   cfg = config.services.modded-minecraft-servers;
 
   # Server config rendering
@@ -59,25 +63,35 @@ in {
   options = {
     services.modded-minecraft-servers = {
       eula = mkOption {
-        type = with types; bool;
+        type = types.bool;
         default = false;
         description = ''
-          Whether or not you accept the Minecraft EULA
+          Whether or not you accept the Minecraft EULA.
         '';
       };
 
       user = mkOption {
         default = "mc";
         type = types.str;
+        description = ''
+          The name of the user who is going to be running
+          the servers. Defaults to "mc".
+        '';
       };
 
       group = mkOption {
         default = "mc";
         type = types.str;
+        description = ''
+          The name of the group of the user who is going to
+          be running the servers. Defaults to "mc".
+        '';
       };
 
       instances = mkOption {
-        type = with types; attrsOf (submodule (import ./minecraft-instance-options.nix pkgs));
+        type =
+          types.attrsOf
+          (types.submodule (import ./minecraft-instance-options.nix pkgs));
         default = {};
         description = ''
           Define instances of Minecraft servers to run.
@@ -109,30 +123,41 @@ in {
     assertions = [
       {
         assertion = cfg.eula;
-        message = "You must accept the Mojang EULA in order to run any servers.";
+        message = ''
+          You must accept the Mojang EULA in order to run any servers.
+        '';
       }
-
       {
         assertion = (unique serverPorts) == serverPorts;
-        message = "Your Minecraft instances have overlapping server ports. They must be unique.";
+        message = ''
+          Your Minecraft instances have overlapping server ports.
+          They must be unique.
+        '';
       }
-
       {
         assertion = (unique rconPorts) == rconPorts;
-        message = "Your Minecraft instances have overlapping RCON ports. They must be unique.";
+        message = ''
+          Your Minecraft instances have overlapping RCON ports.
+          They must be unique.
+        '';
       }
-
       {
         assertion = (unique queryPorts) == queryPorts;
-        message = "Your Minecraft instances have overlapping query ports. They must be unique.";
+        message = ''
+          Your Minecraft instances have overlapping query ports.
+          They must be unique.
+        '';
       }
-
       (
         let
           allPorts = serverPorts ++ rconPorts ++ queryPorts;
         in {
           assertion = (unique allPorts) == allPorts;
-          message = "Your Minecraft instances have some overlapping ports among server, rcon and query ports. They must all be unique.";
+          message = ''
+            Your Minecraft instances have some overlapping ports
+            among server, rcon and query ports. They must all be
+            unique.
+          '';
         }
       )
     ];
@@ -157,7 +182,7 @@ in {
         partOf = ["tmuxServer.service"];
         after = ["tmuxServer.service"];
 
-        path = with pkgs; [icfg.jvmPackage bash];
+        path = [icfg.jvmPackage pkgs.bash];
 
         environment = {
           JVMOPTS = icfg.jvmOptString;

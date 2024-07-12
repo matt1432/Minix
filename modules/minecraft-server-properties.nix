@@ -2,8 +2,9 @@
   lib,
   config,
   ...
-}:
-with lib; {
+}: let
+  inherit (lib) literalExample mkOption types;
+in {
   options = {
     allow-flight = mkOption {
       type = with types; bool;
@@ -664,7 +665,7 @@ with lib; {
     extra-options = mkOption {
       type = with types; attrs;
       default = {};
-      example = options.literalExample ''
+      example = literalExample ''
         {
         }
       '';
