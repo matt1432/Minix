@@ -207,7 +207,7 @@ in {
           KillSignal = "SIGCONT";
           ExecStart = concatStrings [
             "${pkgs.tmux}/bin/tmux new-session -s ${fullname} -d"
-            " '${WorkingDirectory}'"
+            " '${WorkingDirectory}/start.sh'"
           ];
           ExecStop = concatStrings [
               "${pkgs.tmux}/bin/tmux send-keys -t ${fullname}:0.0"
