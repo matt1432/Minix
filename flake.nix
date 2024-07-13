@@ -1,5 +1,5 @@
 {
-  description = "NixOS module for minecraft servers";
+  description = "Minix: NixOS module for minecraft servers";
 
   inputs = {
     nixpkgs = {
@@ -25,9 +25,9 @@
         attrs system nixpkgs.legacyPackages.${system});
   in {
     nixosModules = {
-      nms = import ./modules;
+      minix = import ./modules;
 
-      default = self.nixosModules.nms;
+      default = self.nixosModules.minix;
     };
 
     formatter = perSystem (_: pkgs: pkgs.alejandra);

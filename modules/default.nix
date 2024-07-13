@@ -9,7 +9,7 @@
   inherit (lib.strings) concatStrings concatStringsSep escape stringAsChars;
   inherit (lib.attrsets) filterAttrs mapAttrs' mapAttrsToList nameValuePair optionalAttrs;
 
-  cfg = config.services.modded-minecraft-servers;
+  cfg = config.services.minix;
 
   # Server config rendering
   serverPropertiesFile = serverConfig:
@@ -61,7 +61,7 @@
   mkInstanceName = name: "mc-${name}";
 in {
   options = {
-    services.modded-minecraft-servers = {
+    services.minix = {
       eula = mkOption {
         type = types.bool;
         default = false;
