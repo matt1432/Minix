@@ -209,16 +209,14 @@ in {
             "${pkgs.tmux}/bin/tmux new-session -s ${fullname} -d"
             " '${WorkingDirectory}'"
           ];
-          ExecStop = ''
-            ${concatStrings [
+          ExecStop = concatStrings [
               "${pkgs.tmux}/bin/tmux send-keys -t ${fullname}:0.0"
               " 'say SERVER SHUTTING DOWN. Saving map...' C-m"
               " 'save-all' C-m"
               " 'stop' C-m"
-            ]}
-            sleep 10
-            ${pkgs.tmux}/bin/tmux kill-session -t ${fullname}
-          '';
+              "; ${pkgs.coreutils}/bin/sleep 10"
+              "; ${pkgs.tmux}/bin/tmux kill-session -t ${fullname}"
+          ];
           User = cfg.user;
           Group = cfg.group;
           StateDirectory = fullname;
