@@ -18,6 +18,7 @@
   };
 
   outputs = {
+    curseforge-server-downloader-src,
     nixpkgs,
     self,
     ...
@@ -38,7 +39,9 @@
     };
 
     packages = perSystem (system: pkgs: {
-      curseforge-server-downloader = pkgs.callPackage ./pkgs;
+      curseforge-server-downloader = pkgs.callPackage ./pkgs {
+        inherit curseforge-server-downloader-src;
+      };
     });
 
     formatter = perSystem (_: pkgs: pkgs.alejandra);
