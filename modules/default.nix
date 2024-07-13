@@ -219,7 +219,7 @@ in {
           ];
           User = cfg.user;
           Group = cfg.group;
-          StateDirectory = fullname;
+          StateDirectory = "minix/${fullname}";
           inherit WorkingDirectory;
         };
 
