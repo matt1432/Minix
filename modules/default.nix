@@ -103,7 +103,7 @@ in {
 
     # Attrset options
     perEnabledInstance = func:
-      mapAttrs' (i: c: nameValuePair i (func i c)) enabledInstances;
+      mapAttrs' (i: c: nameValuePair "minix-${i}" (func i c)) enabledInstances;
 
     serverPorts =
       mapAttrsToList
