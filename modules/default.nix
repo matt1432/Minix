@@ -57,8 +57,6 @@
     # eula.txt managed by NixOS Configuration
     eula=true
   '';
-
-  mkInstanceName = name: "mc-${name}";
 in {
   options = {
     services.minix = {
@@ -104,17 +102,24 @@ in {
     enabledInstances = filterAttrs (_: x: x.enable) cfg.instances;
 
     # Attrset options
-    eachEnabledInstance = f: mapAttrs' (i: c: nameValuePair (mkInstanceName i) (f i c)) enabledInstances;
+    perEnabledInstance = func:
+      mapAttrs' (i: c: nameValuePair i (func i c)) enabledInstances;
 
-    serverPorts = mapAttrsToList (_: v: v.serverConfig.server-port) enabledInstances;
+    serverPorts =
+      mapAttrsToList
+      (_: v: v.serverConfig.server-port)
+      enabledInstances;
+
     rconPorts =
       mapAttrsToList
       (_: v: v.serverConfig.rcon-port)
       (filterAttrs (_: x: x.serverConfig.enable-rcon) enabledInstances);
+
     openRconPorts =
       mapAttrsToList
       (_: v: v.serverConfig.rcon-port)
       (filterAttrs (_: x: x.serverConfig.enable-rcon && x.openRcon) enabledInstances);
+
     queryPorts =
       mapAttrsToList
       (_: v: v.serverConfig.query-port)
@@ -176,7 +181,7 @@ in {
           };
         };
       }
-      // eachEnabledInstance (name: icfg: {
+      // perEnabledInstance (name: icfg: {
         description = "Minecraft Server ${name}";
         wantedBy = ["multi-user.target"];
         partOf = ["tmuxServer.service"];
@@ -193,7 +198,8 @@ in {
         # Add script option instead of running start.sh
 
         serviceConfig = let
-          fullname = mkInstanceName name;
+          WorkingDirectory = "/var/lib/minix/${name}";
+          fullname = "minix-${name}";
         in {
           Type = "oneshot";
           RemainAfterExit = true;
@@ -201,7 +207,7 @@ in {
           KillSignal = "SIGCONT";
           ExecStart = concatStrings [
             "${pkgs.tmux}/bin/tmux new-session -s ${fullname} -d"
-            " '/var/lib/minecraft/${fullname}/start.sh'"
+            " '${WorkingDirectory}'"
           ];
           ExecStop = ''
             ${concatStrings [
@@ -216,7 +222,7 @@ in {
           User = cfg.user;
           Group = cfg.group;
           StateDirectory = fullname;
-          WorkingDirectory = "/var/lib/minecraft/${fullname}";
+          inherit WorkingDirectory;
         };
 
         preStart = ''
@@ -229,6 +235,7 @@ in {
           fi
 
           # This file must be writeable, because Mojang.
+          # TODO: check if any changes were made. Don't start if so
           cp ${serverPropertiesFile icfg.serverConfig} server.properties
           chmod 644 server.properties
         '';

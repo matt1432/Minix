@@ -27,9 +27,8 @@ In your server config:
     eula = true;
 
     instances = {
-      # The name will be used for the state folder and system user.
-      # In this case, the folder is `/var/lib/minecraft/mc-e2es`
-      # and the user `mc-e2es`.
+      # The name will be used for the state folder.
+      # In this case, the folder is `/var/lib/minix/e2es`.
       e2es = {
         enable = true;
 
@@ -148,8 +147,8 @@ access to the appropriate minecraft state folder.
 
 ### Under the hood
 
-Each defined instance runs as its own user `mc-${name}` and has
-its own state folder in `/var/lib/minecraft/mc-${name}`.
+Each defined instance runs as its own user `minix-${name}` and has
+its own state folder in `/var/lib/minix/${name}`.
 
 In order to "install" a modpack, you put all the files for the pack in this
 folder.
@@ -157,4 +156,4 @@ folder.
 Whether you do this using the configured rsync module or any other way is
 irrelevant. Just make sure the entire folder is owned by the correct user.
 
-The server will be run as a systemd unit with the name `mc-${name}`.
+The server will be run as a systemd unit with the name `minix-${name}`.

@@ -13,6 +13,8 @@ in {
   options = {
     enable = mkEnableOption "Enable minecraft server instance ${name}";
 
+    # TODO: add name option
+
     rsyncSSHKeys = mkOption {
       type = with types; listOf str;
       default = [];
