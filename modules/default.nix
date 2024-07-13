@@ -187,7 +187,7 @@ in {
         partOf = ["tmuxServer.service"];
         after = ["tmuxServer.service"];
 
-        path = [icfg.jvmPackage pkgs.bash];
+        path = [icfg.jvmPackage pkgs.bash] ++ icfg.serviceExtraPackages;
 
         environment = {
           JVMOPTS = icfg.jvmOptString;
@@ -210,12 +210,12 @@ in {
             " '${WorkingDirectory}/start.sh'"
           ];
           ExecStop = concatStrings [
-              "${pkgs.tmux}/bin/tmux send-keys -t ${fullname}:0.0"
-              " 'say SERVER SHUTTING DOWN. Saving map...' C-m"
-              " 'save-all' C-m"
-              " 'stop' C-m"
-              "; ${pkgs.coreutils}/bin/sleep 10"
-              "; ${pkgs.tmux}/bin/tmux kill-session -t ${fullname}"
+            "${pkgs.tmux}/bin/tmux send-keys -t ${fullname}:0.0"
+            " 'say SERVER SHUTTING DOWN. Saving map...' C-m"
+            " 'save-all' C-m"
+            " 'stop' C-m"
+            "; ${pkgs.coreutils}/bin/sleep 10"
+            "; ${pkgs.tmux}/bin/tmux kill-session -t ${fullname}"
           ];
           User = cfg.user;
           Group = cfg.group;

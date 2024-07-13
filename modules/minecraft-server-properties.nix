@@ -5,6 +5,7 @@
 }: let
   inherit (lib) literalExample mkOption types;
 in {
+  # TODO: assume less stuff (in case of different versions)
   options = {
     allow-flight = mkOption {
       type = with types; bool;

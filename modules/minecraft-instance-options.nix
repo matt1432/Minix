@@ -151,5 +151,13 @@ in {
         by hand or through console commands/rcon.
       '';
     };
+
+    serviceExtraPackages = mkOption {
+      type = with types; listOf package;
+      default = [];
+      description = ''
+        A list of packages that will be made available to your launch script.
+      '';
+    };
   };
 }
