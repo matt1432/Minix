@@ -108,6 +108,9 @@ folders, adjust things to your liking, and wrap it all up in a `start.sh`
 script that you either write yourself or adapt from one of the scripts
 provided with the modpack.
 
+You can also use the package `curseforge-server-downloader` which is
+exposed by this flake. [Link to its Github page](https://github.com/Malpiszonekx4/curseforge-server-downloader)
+
 Bear in mind that if the modpack has mods with native dependencies, such as
 OpenComputers, the download script will likely fetch these native dependencies
 for your current platform. If your platform is not the same as your servers

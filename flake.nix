@@ -8,6 +8,13 @@
       repo = "nixpkgs";
       ref = "nixos-unstable";
     };
+
+    curseforge-server-downloader-src = {
+      type = "github";
+      owner = "Malpiszonekx4";
+      repo = "curseforge-server-downloader";
+      flake = false;
+    };
   };
 
   outputs = {
@@ -29,6 +36,10 @@
 
       default = self.nixosModules.minix;
     };
+
+    packages = perSystem (system: pkgs: {
+      curseforge-server-downloader = pkgs.callPackage ./pkgs;
+    });
 
     formatter = perSystem (_: pkgs: pkgs.alejandra);
   };
