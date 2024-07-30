@@ -1,12 +1,28 @@
 {
   "nodes": {
+    "curseforge-server-downloader-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1691252534,
+        "narHash": "sha256-GqFj2Rms6BxzWdQTQ9imXKSlov3sDk8Cwwl9lwjIGzM=",
+        "owner": "Malpiszonekx4",
+        "repo": "curseforge-server-downloader",
+        "rev": "91901b2efc64ac54c9135d537e4118e2ac0bd286",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Malpiszonekx4",
+        "repo": "curseforge-server-downloader",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1720542800,
-        "narHash": "sha256-ZgnNHuKV6h2+fQ5LuqnUaqZey1Lqqt5dTUAiAnqH0QQ=",
+        "lastModified": 1722185531,
+        "narHash": "sha256-veKR07psFoJjINLC8RK4DiLniGGMgF3QMlS4tb74S6k=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "feb2849fdeb70028c70d73b848214b00d324a497",
+        "rev": "52ec9ac3b12395ad677e8b62106f0b98c1f8569d",
         "type": "github"
       },
       "original": {
@@ -18,6 +34,7 @@
     },
     "root": {
       "inputs": {
+        "curseforge-server-downloader-src": "curseforge-server-downloader-src",
         "nixpkgs": "nixpkgs"
       }
     }

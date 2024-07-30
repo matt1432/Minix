@@ -18,9 +18,9 @@
   };
 
   outputs = {
-    curseforge-server-downloader-src,
-    nixpkgs,
     self,
+    nixpkgs,
+    curseforge-server-downloader-src,
     ...
   }: let
     supportedSystems = [
@@ -30,7 +30,7 @@
 
     perSystem = attrs:
       nixpkgs.lib.genAttrs supportedSystems (system:
-        attrs system nixpkgs.legacyPackages.${system});
+        attrs (import nixpkgs {inherit system;}));
   in {
     nixosModules = {
       minix = import ./modules;
@@ -38,12 +38,14 @@
       default = self.nixosModules.minix;
     };
 
-    packages = perSystem (system: pkgs: {
-      curseforge-server-downloader = pkgs.callPackage ./pkgs {
-        inherit curseforge-server-downloader-src;
-      };
+    packages = perSystem (pkgs: {
+      curseforge-server-downloader =
+        pkgs.callPackage
+        ./pkgs/curseforge-server-downloader.nix {
+          inherit curseforge-server-downloader-src;
+        };
     });
 
-    formatter = perSystem (_: pkgs: pkgs.alejandra);
+    formatter = perSystem (pkgs: pkgs.alejandra);
   };
 }
