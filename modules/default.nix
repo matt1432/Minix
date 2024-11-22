@@ -4,9 +4,9 @@
   config,
   ...
 }: let
-  inherit (lib) mkOption types unique;
+  inherit (lib) getExe mkOption types unique;
   inherit (lib.lists) elem;
-  inherit (lib.strings) concatStrings concatStringsSep escape stringAsChars;
+  inherit (lib.strings) concatStringsSep escape stringAsChars;
   inherit (lib.attrsets) filterAttrs mapAttrs' mapAttrsToList nameValuePair optionalAttrs;
 
   cfg = config.services.minix;
@@ -176,8 +176,20 @@ in {
           serviceConfig = {
             Type = "forking";
             User = cfg.user;
-            ExecStart = "${pkgs.tmux}/bin/tmux new-session -s master -d";
-            ExecStop = "${pkgs.tmux}/bin/tmux kill-session -t master";
+            ExecStart = getExe (pkgs.writeShellApplication {
+              name = "tmuxServer-execstart";
+              runtimeInputs = with pkgs; [tmux];
+              text = ''
+                exec tmux new-session -s master -d
+              '';
+            });
+            ExecStop = getExe (pkgs.writeShellApplication {
+              name = "tmuxServer-execstop";
+              runtimeInputs = with pkgs; [tmux];
+              text = ''
+                exec tmux kill-session -t master
+              '';
+            });
           };
         };
       }
@@ -205,18 +217,26 @@ in {
           RemainAfterExit = true;
           KillMode = "none";
           KillSignal = "SIGCONT";
-          ExecStart = concatStrings [
-            "${pkgs.tmux}/bin/tmux new-session -s ${fullname} -d"
-            " '${WorkingDirectory}/start.sh'"
-          ];
-          ExecStop = concatStrings [
-            "${pkgs.tmux}/bin/tmux send-keys -t ${fullname}:0.0"
-            " 'say SERVER SHUTTING DOWN. Saving map...' C-m"
-            " 'save-all' C-m"
-            " 'stop' C-m"
-            "; ${pkgs.coreutils}/bin/sleep 10"
-            "; ${pkgs.tmux}/bin/tmux kill-session -t ${fullname}"
-          ];
+          ExecStart = getExe (pkgs.writeShellApplication {
+            name = "${name}-execstart";
+            runtimeInputs = with pkgs; [tmux];
+            text = ''
+              exec tmux new-session -s ${fullname} -d '${WorkingDirectory}/start.sh'
+            '';
+          });
+          ExecStop = getExe (pkgs.writeShellApplication {
+            name = "${name}-execstop";
+            runtimeInputs = with pkgs; [coreutils tmux];
+            text = ''
+              tmux send-keys -t ${fullname}:0.0 \
+                  'say SERVER SHUTTING DOWN. Saving map...' C-m \
+                  'save-all' C-m \
+                  'stop' C-m
+
+              sleep 10
+              tmux kill-session -t ${fullname}
+            '';
+          });
           User = cfg.user;
           Group = cfg.group;
           StateDirectory = "minix/${fullname}";
