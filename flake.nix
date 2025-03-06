@@ -9,6 +9,12 @@
       ref = "nixos-unstable";
     };
 
+    systems = {
+      type = "github";
+      owner = "nix-systems";
+      repo = "default-linux";
+    };
+
     curseforge-server-downloader-src = {
       type = "github";
       owner = "Malpiszonekx4";
@@ -19,17 +25,13 @@
 
   outputs = {
     self,
+    systems,
     nixpkgs,
     curseforge-server-downloader-src,
     ...
   }: let
-    supportedSystems = [
-      "x86_64-linux"
-      "x86_64-darwin"
-    ];
-
     perSystem = attrs:
-      nixpkgs.lib.genAttrs supportedSystems (system:
+      nixpkgs.lib.genAttrs (import systems) (system:
         attrs (import nixpkgs {inherit system;}));
   in {
     nixosModules = {
