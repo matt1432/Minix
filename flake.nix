@@ -36,16 +36,20 @@
   in {
     nixosModules = {
       minix = import ./modules;
-
       default = self.nixosModules.minix;
     };
 
-    packages = perSystem (pkgs: {
-      curseforge-server-downloader =
-        pkgs.callPackage
-        ./pkgs/curseforge-server-downloader.nix {
+    overlays = {
+      minix = final: prev: {
+        curseforge-server-downloader = final.callPackage ./pkgs/curseforge-server-downloader.nix {
           inherit curseforge-server-downloader-src;
         };
+      };
+      default = self.overlays.minix;
+    };
+
+    packages = perSystem (pkgs: {
+      inherit (pkgs) curseforge-server-downloader;
     });
 
     formatter = perSystem (pkgs: pkgs.alejandra);
