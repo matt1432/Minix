@@ -176,6 +176,7 @@ in {
           serviceConfig = {
             Type = "forking";
             User = cfg.user;
+
             ExecStart = getExe (pkgs.writeShellApplication {
               name = "tmuxServer-execstart";
               runtimeInputs = with pkgs; [tmux];
@@ -183,6 +184,7 @@ in {
                 exec tmux new-session -s master -d
               '';
             });
+
             ExecStop = getExe (pkgs.writeShellApplication {
               name = "tmuxServer-execstop";
               runtimeInputs = with pkgs; [tmux];
@@ -217,6 +219,7 @@ in {
           RemainAfterExit = true;
           KillMode = "none";
           KillSignal = "SIGCONT";
+
           ExecStart = getExe (pkgs.writeShellApplication {
             name = "${name}-execstart";
             runtimeInputs = with pkgs; [tmux];
@@ -224,6 +227,7 @@ in {
               exec tmux new-session -s ${fullname} -d '${WorkingDirectory}/start.sh'
             '';
           });
+
           ExecStop = getExe (pkgs.writeShellApplication {
             name = "${name}-execstop";
             runtimeInputs = with pkgs; [coreutils tmux];
@@ -237,9 +241,10 @@ in {
               tmux kill-session -t ${fullname}
             '';
           });
+
           User = cfg.user;
           Group = cfg.group;
-          StateDirectory = "minix/${fullname}";
+          StateDirectory = "minix/${name}";
           inherit WorkingDirectory;
         };
 
