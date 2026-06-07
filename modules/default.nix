@@ -195,19 +195,19 @@ in {
           };
         };
       }
-      // perEnabledInstance (name: icfg: {
+      // perEnabledInstance (name: icfg: let
+        environment = {
+          JVMOPTS = icfg.jvmOptString;
+          MCRCON_PORT = toString icfg.serverConfig.rcon-port;
+          MCRCON_PASS = "whatisloveohbabydonthurtmedonthurtmenomore";
+        };
+      in {
         description = "Minecraft Server ${name}";
         wantedBy = ["multi-user.target"];
         partOf = ["tmuxServer.service"];
         after = ["tmuxServer.service"];
 
         path = [icfg.jvmPackage pkgs.bash] ++ icfg.serviceExtraPackages;
-
-        environment = {
-          JVMOPTS = icfg.jvmOptString;
-          MCRCON_PORT = toString icfg.serverConfig.rcon-port;
-          MCRCON_PASS = "whatisloveohbabydonthurtmedonthurtmenomore";
-        };
 
         # Add script option instead of running start.sh
 
@@ -224,7 +224,7 @@ in {
             name = "${name}-execstart";
             runtimeInputs = with pkgs; [tmux];
             text = ''
-              exec tmux new-session -s ${fullname} -d '${WorkingDirectory}/start.sh'
+              exec tmux new-session ${concatStringsSep " " (mapAttrsToList (n: v: "-e '${n}=${v}'") environment)} -s ${fullname} -d '${WorkingDirectory}/start.sh'
             '';
           });
 
