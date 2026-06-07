@@ -224,7 +224,7 @@ in {
             name = "${name}-execstart";
             runtimeInputs = with pkgs; [tmux];
             text = ''
-              exec tmux new-session ${concatStringsSep " " (mapAttrsToList (n: v: "-e '${n}=${v}'") environment)} -s ${fullname} -d '${WorkingDirectory}/start.sh'
+              exec tmux new-session -e "PATH=$PATH" ${concatStringsSep " " (mapAttrsToList (n: v: "-e '${n}=${v}'") environment)} -s ${fullname} -d '${WorkingDirectory}/start.sh'
             '';
           });
 
