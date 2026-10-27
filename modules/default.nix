@@ -46,7 +46,7 @@
   mkOptionText = serverConfig: let
     # Merge declared options with extraConfig
     c =
-      (builtins.removeAttrs serverConfig ["extra-options"])
+      (removeAttrs serverConfig ["extra-options"])
       // serverConfig.extra-options;
   in
     concatStringsSep "\n"
@@ -181,6 +181,7 @@ in {
               name = "tmuxServer-execstart";
               runtimeInputs = with pkgs; [tmux];
               text = ''
+                export PATH="$PATH:/etc/profiles/per-user/${cfg.user}/bin:/run/current-system/sw/bin"
                 exec tmux new-session -s master -d
               '';
             });
