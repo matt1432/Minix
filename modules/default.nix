@@ -220,6 +220,8 @@ in {
           RemainAfterExit = true;
           KillMode = "none";
           KillSignal = "SIGCONT";
+          # Leave headroom over the ExecStop wait loop so systemd doesn't kill it first
+          TimeoutStopSec = icfg.stopTimeout + 30;
 
           ExecStart = getExe (pkgs.writeShellApplication {
             name = "${name}-execstart";
@@ -233,12 +235,23 @@ in {
             name = "${name}-execstop";
             runtimeInputs = with pkgs; [coreutils tmux];
             text = ''
+              # Server already exited (crashed or stopped from the console)
+              if ! tmux has-session -t ${fullname} 2>/dev/null; then
+                exit 0
+              fi
+
               tmux send-keys -t ${fullname}:0.0 \
                   'say SERVER SHUTTING DOWN. Saving map...' C-m \
                   'save-all' C-m \
                   'stop' C-m
 
-              sleep 10
+              # The session closes once start.sh (and the JVM) exits
+              for _ in $(seq ${toString icfg.stopTimeout}); do
+                tmux has-session -t ${fullname} 2>/dev/null || exit 0
+                sleep 1
+              done
+
+              echo "Server ${name} did not stop within ${toString icfg.stopTimeout}s, killing it" >&2
               tmux kill-session -t ${fullname}
             '';
           });

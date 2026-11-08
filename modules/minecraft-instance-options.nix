@@ -159,5 +159,15 @@ in {
         A list of packages that will be made available to your launch script.
       '';
     };
+
+    stopTimeout = mkOption {
+      type = with types; ints.positive;
+      default = 300;
+      description = ''
+        Maximum number of seconds to wait for the server to finish saving
+        and exit after sending <literal>stop</literal>, before the tmux
+        session is forcibly killed.
+      '';
+    };
   };
 }
